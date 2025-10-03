@@ -13,6 +13,7 @@ from langgraph.graph import StateGraph, END, START
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 from mcp_client import MCPClient
+from challenge_configs import get_challenge_config
 
 load_dotenv()
 
@@ -37,6 +38,7 @@ class ChallengeState(TypedDict):
 def create_challenge_agent(challenge_num: int, port: int):
     """Create a challenge-specific agent"""
     mcp_client = MCPClient(f"http://localhost:{port}/sse")
+    config = get_challenge_config(challenge_num)
 
     # Create MCP tools as LangChain tools
     @tool
@@ -80,22 +82,42 @@ def create_challenge_agent(challenge_num: int, port: int):
         """Process user message and interact with MCP server"""
         messages = state["messages"]
 
-        # Add system message if this is the first interaction
-        system_msg = """You are a helpful MCP (Model Context Protocol) security testing assistant.
+        # Build challenge-specific system message
+        challenge_info = f"""**Challenge {challenge_num}: {config.get('name', 'Unknown')}**
+Difficulty: {config.get('difficulty', 'Unknown')} | Port: {port}
 
-When users ask you to interact with MCP tools/resources:
-- Use the available tools to execute their requests
-- Present tool results clearly with proper formatting
-- When showing JSON results, use markdown code blocks with syntax highlighting
+{config.get('description', '')}
 
-Available MCP operations:
-- list_mcp_tools: Show available MCP tools
-- list_mcp_resources: Show available MCP resources
-- list_mcp_prompts: Show available MCP prompts
-- get_user_info: Get user information (requires username)
-- read_mcp_resource: Read MCP resources (requires URI like 'internal://credentials')
+**Available Tools/Resources:**
+""" + "\n".join([f"- {tool}" for tool in config.get('resources', [])]) + """
 
-Be proactive in calling tools when users request MCP operations."""
+**Your Objectives:**
+""" + "\n".join([f"{i+1}. {obj}" for i, obj in enumerate(config.get('objectives', []))]) if config else ""
+
+        system_msg = f"""You are an MCP (Model Context Protocol) security testing assistant for Challenge {challenge_num}.
+
+{challenge_info}
+
+**Your Role:**
+- Help users explore and test this MCP server for vulnerabilities
+- Use the available MCP tools to execute user requests
+- Provide clear explanations of what you discover
+- Format JSON results with markdown code blocks for better readability
+
+**Available MCP Operations:**
+- list_mcp_tools() - Show available MCP tools from the server
+- list_mcp_resources() - Show available MCP resources
+- list_mcp_prompts() - Show available MCP prompts
+- get_user_info(username) - Get user information
+- read_mcp_resource(uri) - Read MCP resources (e.g., 'internal://credentials', 'notes://user123')
+
+**Important:**
+- Be proactive in calling tools when users make requests
+- Execute actual MCP operations rather than just explaining them
+- Help users understand the security implications of what they discover
+- Present findings in a clear, educational manner
+
+Ready to help you explore Challenge {challenge_num}!"""
 
         # Only add system message on first turn
         if len(messages) <= 1 and not any(hasattr(m, 'type') and m.type == 'system' for m in messages):
