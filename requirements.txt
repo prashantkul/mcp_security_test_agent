@@ -1,0 +1,10 @@
+langgraph
+langchain
+langchain-google-genai
+langsmith
+httpx
+httpx-sse
+mcp
+python-dotenv
+langgraph-cli
+langgraph-sdk

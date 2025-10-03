@@ -1,0 +1,17 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "orchestrator": "./orchestrator_agent.py:graph",
+    "Challenge1": "./challenge_agents.py:Challenge1",
+    "Challenge2": "./challenge_agents.py:Challenge2",
+    "Challenge3": "./challenge_agents.py:Challenge3",
+    "Challenge4": "./challenge_agents.py:Challenge4",
+    "Challenge5": "./challenge_agents.py:Challenge5",
+    "Challenge6": "./challenge_agents.py:Challenge6",
+    "Challenge7": "./challenge_agents.py:Challenge7",
+    "Challenge8": "./challenge_agents.py:Challenge8",
+    "Challenge9": "./challenge_agents.py:Challenge9",
+    "Challenge10": "./challenge_agents.py:Challenge10"
+  },
+  "env": ".env"
+}
