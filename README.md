@@ -14,6 +14,7 @@ This repository contains an interactive security testing agent designed specific
 - 📊 **LangSmith Tracing**: Complete observability and debugging
 - 🎨 **LangGraph Studio UI**: Beautiful chat interface for interactive testing
 - 🔐 **Full MCP Support**: Tools, Resources, and Prompts
+- 🎯 **Challenge-Specific Configs**: Each agent has customized objectives, resources, and hints
 - 🎓 **Educational**: Learn security concepts through hands-on exploration
 
 ## 🏗️ Architecture
@@ -46,6 +47,7 @@ Each challenge agent connects to its respective MCP server running on ports 9001
 langgraph-security-mcp/
 ├── orchestrator_agent.py    # Main orchestrator to guide users
 ├── challenge_agents.py       # 10 challenge-specific agents (C1-C10)
+├── challenge_configs.py      # Challenge metadata (name, tools, resources, objectives)
 ├── mcp_client.py            # MCP client wrapper
 ├── hint_agent.py            # (Legacy) Interactive hint agent
 ├── langgraph.json           # LangGraph configuration
@@ -185,13 +187,20 @@ Agent: 🔧 Tool result:
 
 The agent supports all 10 challenges from the Damn Vulnerable MCP Server:
 
-| Challenge | Port | Status | Description |
-|-----------|------|--------|-------------|
-| Challenge 1 | 9001 | ✅ Ready | Basic Prompt Injection |
-| Challenge 2 | 9002 | 🔜 Coming | TBD |
-| Challenge 3 | 9003 | 🔜 Coming | TBD |
-| ... | ... | ... | ... |
-| Challenge 10 | 9010 | 🔜 Coming | TBD |
+| Challenge | Port | Difficulty | Description |
+|-----------|------|------------|-------------|
+| Challenge 1 | 9001 | Easy | Basic Prompt Injection |
+| Challenge 2 | 9002 | Easy | Tool Poisoning |
+| Challenge 3 | 9003 | Easy | Excessive Permission Scope |
+| Challenge 4 | 9004 | Medium | Rug Pull Attack |
+| Challenge 5 | 9005 | Medium | Tool Shadowing |
+| Challenge 6 | 9006 | Medium | Indirect Prompt Injection |
+| Challenge 7 | 9007 | Medium | Token Theft |
+| Challenge 8 | 9008 | Hard | Malicious Code Execution |
+| Challenge 9 | 9009 | Hard | Remote Access Control |
+| Challenge 10 | 9010 | Hard | Multi-Vector Attack |
+
+**⚠️ Note**: Challenge-specific configurations are implemented. Each agent has customized system prompts with objectives, resources, and hints. **Testing is pending** to verify all challenges work correctly with the vulnerable MCP servers.
 
 ## 🔧 How It Works
 
