@@ -1,51 +1,90 @@
-# LangGraph Security Agent for MCP Server Testing
+# LangGraph MCP Security Testing Agent
 
-A LangGraph-based security researcher agent that tests MCP (Model Context Protocol) servers for vulnerabilities using Gemini 2.5 Flash as the backend LLM.
+A LangGraph-based multi-agent system for testing [Damn Vulnerable MCP Server](https://github.com/harishsg993010/damn-vulnerable-MCP-server) using Gemini 2.5 Flash with intelligent function calling.
 
-## Features
+## 🎯 Purpose
 
-- ✅ **Proper SSE Connection**: Uses MCP Python SDK's `sse_client` for reliable SSE connections
-- ✅ **Gemini 2.5 Flash Integration**: Powered by Google's Gemini model for AI-driven security analysis
-- ✅ **Full MCP Protocol Support**: Discovers and uses Tools, Prompts, and Resources from MCP servers
-- ✅ **LangGraph State Management**: Tracks analysis state and findings
-- ✅ **LangSmith Tracing**: Full observability and debugging with LangSmith
-- ✅ **Challenge 1 Integration**: Successfully tests Basic Prompt Injection vulnerabilities
+This repository contains an interactive security testing agent designed specifically for testing the vulnerabilities in the **[Damn Vulnerable MCP Server](https://github.com/harishsg993010/damn-vulnerable-MCP-server)** project. It provides a hands-on learning environment for understanding MCP (Model Context Protocol) security issues through 10 different challenge scenarios.
 
-## Project Structure
+## ✨ Features
+
+- 🤖 **Multi-Agent Architecture**: Orchestrator + 10 individual challenge agents
+- 🔧 **Function Calling Integration**: LLM dynamically calls MCP tools based on user requests
+- 💬 **Conversation Persistence**: Full conversation history within threads
+- 📊 **LangSmith Tracing**: Complete observability and debugging
+- 🎨 **LangGraph Studio UI**: Beautiful chat interface for interactive testing
+- 🔐 **Full MCP Support**: Tools, Resources, and Prompts
+- 🎓 **Educational**: Learn security concepts through hands-on exploration
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│           LangGraph Studio UI (Port 2024)           │
+└─────────────────────┬───────────────────────────────┘
+                      │
+        ┌─────────────┴─────────────┐
+        │   Orchestrator Agent      │
+        │   (Guides users)          │
+        └─────────────┬─────────────┘
+                      │
+        ┌─────────────┴──────────────────────┐
+        │                                    │
+    ┌───▼────┐  ┌────────┐  ...  ┌─────────▼┐
+    │ C1 (9001)│  │C2 (9002)│       │C10 (9010)│
+    └───┬────┘  └───┬────┘         └────┬────┘
+        │           │                    │
+        ▼           ▼                    ▼
+   MCP Server   MCP Server          MCP Server
+```
+
+Each challenge agent connects to its respective MCP server running on ports 9001-9010.
+
+## 📁 Project Structure
 
 ```
 langgraph-security-mcp/
-├── hint_agent.py                # Interactive hint agent (LangGraph Chat UI)
-├── security_agent_final.py      # Full analysis agent with LangSmith integration
-├── test_sse_client.py           # Simple SSE connection test
-├── langgraph.json               # LangGraph configuration
-├── requirements.txt             # Python dependencies
-├── .env                         # Environment variables
-└── README.md                    # This file
+├── orchestrator_agent.py    # Main orchestrator to guide users
+├── challenge_agents.py       # 10 challenge-specific agents (C1-C10)
+├── mcp_client.py            # MCP client wrapper
+├── hint_agent.py            # (Legacy) Interactive hint agent
+├── langgraph.json           # LangGraph configuration
+├── requirements.txt         # Python dependencies
+├── .env                     # Environment variables (not committed)
+├── .gitignore              # Git ignore rules
+└── README.md               # This file
 ```
 
-## Installation
+## 🚀 Installation
 
-1. **Create conda environment** (already done):
+### 1. Clone this repository
+
 ```bash
+git clone git@github.com:prashantkul/mcp_security_test_agent.git
+cd mcp_security_test_agent
+```
+
+### 2. Create conda environment
+
+```bash
+conda create -n langgraph_mcp python=3.11
 conda activate langgraph_mcp
 ```
 
-2. **Install dependencies**:
+### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-## Configuration
+### 4. Configure environment variables
 
-Create a `.env` file with:
+Create a `.env` file:
 
 ```env
 # Gemini Configuration
 GOOGLE_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
-GEMINI_EMBEDDING_MODEL=gemini-embedding-001
-CONDA_ENV_NAME=langgraph_mcp
 
 # LangSmith Configuration (optional but recommended)
 LANGCHAIN_TRACING_V2=true
@@ -53,25 +92,31 @@ LANGCHAIN_API_KEY=your_langsmith_api_key_here
 LANGCHAIN_PROJECT=mcp-security-agent
 ```
 
-### Get Your API Keys:
-- **Gemini API**: [Get key from Google AI Studio](https://makersuite.google.com/app/apikey)
-- **LangSmith API**: [Get key from LangSmith](https://smith.langchain.com/settings)
+**Get API Keys:**
+- **Gemini API**: [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **LangSmith API**: [LangSmith Settings](https://smith.langchain.com/settings)
 
-## Usage
+## 🎮 Usage
 
-### Start the Challenge 1 MCP Server
+### Step 1: Start the Damn Vulnerable MCP Server
 
-First, make sure the Challenge1 MCP server is running on port 9001:
+First, clone and run the vulnerable MCP server:
 
 ```bash
-# In another terminal, run the vulnerable MCP server
-cd /Users/pskulkarni/Documents/source-code/vulnerable_mcp/damn-vulnerable-MCP-server/challenges/easy/challenge1
-python server_sse.py
+# Clone the vulnerable server repository
+git clone https://github.com/harishsg993010/damn-vulnerable-MCP-server.git
+cd damn-vulnerable-MCP-server
+
+# Start Challenge 1 (or any challenge you want to test)
+cd challenges/easy/challenge1
+python server_sse.py  # Runs on port 9001
 ```
 
-### Option 1: Interactive Hint Agent (LangGraph Chat UI) ⭐ RECOMMENDED
+The server will start on the respective port (9001-9010 depending on the challenge).
 
-The hint agent provides interactive guidance and hints for solving security challenges:
+### Step 2: Start the LangGraph Agent
+
+In a separate terminal:
 
 ```bash
 conda activate langgraph_mcp
@@ -81,210 +126,135 @@ langgraph dev
 This will:
 - Start the LangGraph API server on `http://127.0.0.1:2024`
 - Open LangGraph Studio in your browser
-- Provide a chat interface to interact with the hint agent
+- Register all 11 agents (orchestrator + Challenge1-Challenge10)
 
-**Chat Interface URL**: https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024
+### Step 3: Interact with the Agent
 
-### Option 2: Full Security Analysis Agent
+#### Option A: Use the Orchestrator (Recommended)
 
-For a complete automated security analysis:
+The orchestrator provides guidance on how to use the challenge agents:
 
-```bash
-conda activate langgraph_mcp
-python security_agent_final.py
-```
+1. Select **"orchestrator"** from the agent dropdown
+2. Ask questions or request guidance
+3. Switch to specific challenge agents as instructed
 
-### Test SSE Connection Only
+#### Option B: Direct Challenge Testing
 
-To verify the SSE connection without running the full agent:
+For hands-on testing, directly select a challenge agent:
 
-```bash
-python test_sse_client.py
-```
+1. Select **"Challenge1"** (or any Challenge2-10) from the dropdown
+2. Start testing with commands like:
+   - `list resources` - See available MCP resources
+   - `list tools` - See available MCP tools
+   - `list prompts` - See available MCP prompts
+   - `run get_user_info with user=admin` - Execute MCP tool
+   - `read resource internal://credentials` - Read MCP resource
 
-## How the Hint Agent Works
+The LLM will intelligently interpret your requests and call the appropriate MCP tools!
 
-The hint agent is an interactive chat-based assistant that helps you learn about MCP security vulnerabilities:
-
-### Progressive Hint System
-
-1. **Gentle Hints**: Points you in the right direction without spoiling the solution
-2. **Specific Hints**: Provides more details about what to look for
-3. **Technical Hints**: Explains the vulnerability mechanism
-4. **Example Payloads**: Shows working examples only when you're really stuck
-
-### Example Conversation
+## 🧪 Example Interaction
 
 ```
-You: I'm stuck on Challenge 1, can you give me a hint?
+You: list resources
 
-Agent: Great question! For Challenge 1, think about what happens when you put
-your own text into the {user_id} part of the notes:// URI. What if that text
-contained special instructions instead of just a user ID? 🤔
+Agent: 📋 Resources:
+[
+  {
+    "uri": "notes://{user_id}",
+    "name": "user_notes",
+    "description": "Access user notes"
+  },
+  {
+    "uri": "internal://credentials",
+    "name": "credentials",
+    "description": "System credentials"
+  }
+]
 
-You: I tried notes://admin but nothing happened
+You: run get_user_info tool with user=admin
 
-Agent: Good start! You're on the right track with the notes:// resource.
-But 'admin' is just a regular user ID. Think bigger - what if you could
-make the LLM do something completely different than just fetch notes?
-What would you want it to do? 🎯
+Agent: 🔧 Tool result:
+{
+  "username": "admin",
+  "role": "administrator",
+  "email": "admin@example.com"
+}
 ```
 
-### Features
-- 😊 Friendly and encouraging tone
-- 🎯 Progressive learning approach
-- 💡 Explains the "why" behind concepts
-- 🔐 Teaches security through discovery
+## 🎓 Available Challenges
 
-## How the Analysis Agent Works
+The agent supports all 10 challenges from the Damn Vulnerable MCP Server:
 
-### 1. SSE Connection
-The agent uses the official MCP Python SDK to establish an SSE connection:
+| Challenge | Port | Status | Description |
+|-----------|------|--------|-------------|
+| Challenge 1 | 9001 | ✅ Ready | Basic Prompt Injection |
+| Challenge 2 | 9002 | 🔜 Coming | TBD |
+| Challenge 3 | 9003 | 🔜 Coming | TBD |
+| ... | ... | ... | ... |
+| Challenge 10 | 9010 | 🔜 Coming | TBD |
+
+## 🔧 How It Works
+
+### Function Calling Integration
+
+Instead of hardcoded command parsing, the agent uses **LangChain function calling**:
+
+1. **MCP tools are exposed as LangChain tools**:
+   - `list_mcp_tools()` - List available tools
+   - `list_mcp_resources()` - List available resources
+   - `list_mcp_prompts()` - List available prompts
+   - `get_user_info(username)` - Get user information
+   - `read_mcp_resource(uri)` - Read MCP resource
+
+2. **LLM decides when to call tools**: Gemini 2.5 Flash intelligently interprets natural language requests and calls the appropriate tools
+
+3. **Agent-Tool Loop**: The graph executes tools and feeds results back to the LLM
+
+### Conversation Persistence
+
+Uses the `add_messages` reducer to maintain full conversation history:
 
 ```python
-from mcp import ClientSession
-from mcp.client.sse import sse_client
-
-async with sse_client(sse_url) as (read, write):
-    async with ClientSession(read, write) as session:
-        await session.initialize()
-        # ... interact with MCP server
+class ChallengeState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], add_messages]
 ```
 
-### 2. Capability Discovery
-The agent discovers available MCP resources and tools:
+This ensures the agent remembers the entire conversation within each thread.
 
-```python
-# List resources
-resources = await session.list_resources()
+## 📊 LangSmith Observability
 
-# List tools
-tools = await session.list_tools()
-
-# Read resources
-result = await session.read_resource("internal://credentials")
-
-# Call tools
-result = await session.call_tool("get_user_info", {"username": "admin"})
-```
-
-### 3. LangGraph Agent
-The security analysis is powered by a LangGraph agent:
-
-```python
-class AgentState(TypedDict):
-    messages: Sequence[BaseMessage]
-    mcp_tools: list
-    mcp_resources: list
-    resource_contents: dict
-    tool_results: dict
-    iteration: int
-
-# Build graph
-workflow = StateGraph(AgentState)
-workflow.add_node("agent", agent_node)
-workflow.set_entry_point("agent")
-graph = workflow.compile()
-```
-
-### 4. Gemini 2.5 Flash Analysis
-The LLM analyzes the discovered vulnerabilities and generates:
-- Vulnerability identification
-- Exploitation strategies
-- Proof-of-concept payloads
-- Impact assessment
-- Remediation recommendations
-
-## Example Output
-
-```
-🔐 SECURITY ANALYSIS: Challenge 1 - Basic Prompt Injection
-================================================================================
-✅ MCP session initialized
-
-🔍 Discovering MCP capabilities...
-📁 Found 1 resources:
-  - internal://credentials: get_credentials
-🛠️  Found 1 tools:
-  - get_user_info: Get information about a user
-
-📄 Reading resources...
-  ✓ internal://credentials: 300 chars
-
-⚙️  Testing tools...
-  ✓ get_user_info: Success
-
-[SECURITY ANALYSIS]:
-...provides comprehensive analysis with 5 injection payloads...
-```
-
-## Key Implementation Details
-
-### SSE Connection (The LangGraph Way)
-
-Unlike Google ADK which uses `MCPToolset`, LangGraph projects should use the MCP Python SDK directly:
-
-```python
-# ✅ Correct for LangGraph
-from mcp import ClientSession
-from mcp.client.sse import sse_client
-
-async with sse_client(url) as (read, write):
-    async with ClientSession(read, write) as session:
-        # Use session
-
-# ❌ Wrong - This is Google ADK approach
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-toolset = MCPToolset(connection_params=SseConnectionParams(url))
-```
-
-### MCP Protocol Integration
-
-The agent properly implements all three MCP primitives:
-
-1. **Resources**: Read-only data sources (e.g., `internal://credentials`)
-2. **Tools**: Executable functions (e.g., `get_user_info`)
-3. **Prompts**: Reusable prompt templates (discovered but not used in Challenge1)
-
-## Tested Against
-
-- **Challenge 1**: Basic Prompt Injection (Port 9001) ✅
-  - Successfully discovers the `internal://credentials` resource
-  - Identifies the `notes://{user_id}` vulnerability vector
-  - Generates 5 working prompt injection payloads
-  - Provides detailed security analysis and remediation
-
-## Next Steps
-
-To extend this for other challenges:
-
-1. Add challenge-specific analysis prompts
-2. Implement automated payload testing
-3. Add reporting/logging capabilities
-4. Support multiple concurrent challenge analysis
-
-## LangSmith Observability
-
-When LangSmith is enabled, you get:
-- 📊 **Full trace visualization** of agent execution
-- 🔍 **Token usage and cost tracking**
-- 🐛 **Debug information** for each LLM call
-- 📈 **Performance metrics** and latency analysis
-- 🏷️ **Tagged runs** for easy filtering (tags: `security-analysis`, `mcp-testing`, `prompt-injection`)
+When enabled, you get:
+- Full trace visualization of agent execution
+- Token usage and cost tracking
+- Debug information for each LLM call
+- Performance metrics and latency analysis
 
 View your traces at: https://smith.langchain.com
 
-## Dependencies
+## 🛠️ Technical Stack
 
-- `langgraph` - Graph-based agent framework
-- `langchain` - LLM integration framework
-- `langchain-google-genai` - Gemini integration
-- `langsmith` - LangSmith tracing and observability
-- `mcp` - Official MCP Python SDK
-- `httpx` - HTTP client
-- `httpx-sse` - SSE support
-- `python-dotenv` - Environment management
+- **LangGraph**: Multi-agent orchestration and state management
+- **LangChain**: LLM integration and tool calling
+- **Gemini 2.5 Flash**: Backend LLM with function calling
+- **MCP Python SDK**: Official MCP protocol client
+- **LangGraph Studio**: Interactive UI for testing
+- **LangSmith**: Tracing and observability
 
-## License
+## 🤝 Related Projects
 
-This is a security research tool for educational purposes only.
+- **[Damn Vulnerable MCP Server](https://github.com/harishsg993010/damn-vulnerable-MCP-server)**: The vulnerable MCP server this agent tests against
+- **[MCP Protocol](https://modelcontextprotocol.io/)**: Official Model Context Protocol documentation
+
+## 📝 License
+
+This is a security research and educational tool. Use responsibly and only against systems you have permission to test.
+
+## 🙏 Acknowledgments
+
+- Built to test [harishsg993010's Damn Vulnerable MCP Server](https://github.com/harishsg993010/damn-vulnerable-MCP-server)
+- Powered by [Anthropic's Model Context Protocol](https://modelcontextprotocol.io/)
+- Created with [LangGraph](https://langchain-ai.github.io/langgraph/)
+
+---
+
+**⚠️ Security Warning**: This tool is designed for educational purposes and authorized security testing only. Always ensure you have proper authorization before testing any system.
