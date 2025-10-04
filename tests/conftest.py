@@ -52,6 +52,8 @@ class MCPServerManager:
 
     def start_server(self, challenge_num: int) -> subprocess.Popen:
         """Start an MCP challenge server"""
+        import httpx
+
         config = CHALLENGE_SERVERS[challenge_num]
         server_script = self.dvmcp_path / config["path"]
 
@@ -61,29 +63,77 @@ class MCPServerManager:
                 f"Set DVMCP_SERVER_PATH environment variable to the correct path."
             )
 
+        # Determine which Python to use
+        # First check if there's a conda env for DVMCP
+        dvmcp_conda_env = os.getenv("DVMCP_CONDA_ENV", "vul_mcp")
+
+        # Try to use conda environment if available
+        conda_python = subprocess.run(
+            ["conda", "run", "-n", dvmcp_conda_env, "which", "python"],
+            capture_output=True,
+            text=True
+        )
+
+        if conda_python.returncode == 0:
+            # Use conda run to execute in the proper environment
+            cmd = ["conda", "run", "-n", dvmcp_conda_env, "python", str(server_script)]
+            print(f"  Using conda environment: {dvmcp_conda_env}")
+        else:
+            # Fall back to system python
+            cmd = ["python", str(server_script)]
+            print(f"  Warning: conda env '{dvmcp_conda_env}' not found, using system python")
+
         # Start the server process
         process = subprocess.Popen(
-            ["python", str(server_script)],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=server_script.parent,
         )
 
-        # Wait for server to start (give it 2 seconds)
-        time.sleep(2)
+        # Wait for server to start and verify it's responding
+        port = config["port"]
+        max_retries = 10
+        retry_delay = 0.5
 
-        # Check if process is still running
-        if process.poll() is not None:
-            stdout, stderr = process.communicate()
-            raise RuntimeError(
-                f"Challenge {challenge_num} server failed to start\n"
-                f"stdout: {stdout.decode()}\n"
-                f"stderr: {stderr.decode()}"
-            )
+        for i in range(max_retries):
+            time.sleep(retry_delay)
 
-        self.processes[challenge_num] = process
-        print(f"✓ Started Challenge {challenge_num} server on port {config['port']}")
-        return process
+            # Check if process crashed
+            if process.poll() is not None:
+                stdout, stderr = process.communicate()
+                raise RuntimeError(
+                    f"Challenge {challenge_num} server failed to start\n"
+                    f"stdout: {stdout.decode()}\n"
+                    f"stderr: {stderr.decode()}"
+                )
+
+            # Try to connect to the SSE endpoint
+            try:
+                # Just check if we can connect - SSE will hang/stream so use short timeout
+                with httpx.Client(timeout=0.5) as client:
+                    try:
+                        response = client.get(f"http://localhost:{port}/sse")
+                        # If we get here without exception, server is responding
+                        print(f"✓ Challenge {challenge_num} server ready on port {port}")
+                        self.processes[challenge_num] = process
+                        return process
+                    except httpx.ReadTimeout:
+                        # SSE endpoints will timeout while streaming - this is actually good!
+                        # It means the server is running and responding
+                        print(f"✓ Challenge {challenge_num} server ready on port {port}")
+                        self.processes[challenge_num] = process
+                        return process
+            except httpx.ConnectError:
+                # Server not ready yet, continue waiting
+                continue
+
+        # If we get here, server didn't start in time
+        process.terminate()
+        raise RuntimeError(
+            f"Challenge {challenge_num} server did not respond on port {port} "
+            f"after {max_retries * retry_delay} seconds"
+        )
 
     def stop_server(self, challenge_num: int):
         """Stop an MCP challenge server"""
