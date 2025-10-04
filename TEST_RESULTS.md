@@ -2,11 +2,11 @@
 
 ## Test Summary
 
-**Date**: 2025-10-04  
-**Total Tests**: 14 non-integration tests  
-**Passed**: ✅ 14/14 (100%)  
-**Failed**: ❌ 0  
-**Duration**: ~75 seconds
+**Date**: 2025-10-04
+**Total Tests**: 17 (14 unit + 3 integration)
+**Passed**: ✅ 17/17 (100%)
+**Failed**: ❌ 0
+**Duration**: ~87 seconds (75s unit + 12s integration)
 
 ## Test Breakdown
 
@@ -44,13 +44,42 @@
 
 **Validates**: All 10 challenge agents can handle basic requests.
 
-## Integration Tests (Deferred)
+### ✅ Integration Tests - Challenge 1 (3/3)
+- `test_challenge1_list_tools` - PASSED
+- `test_challenge1_list_resources` - PASSED
+- `test_challenge1_basic_prompt_injection` - PASSED
 
-Integration tests require MCP servers to be running. These can be run with:
+**Validates**:
+- Automatic MCP server spawning in `vul_mcp` conda environment
+- Server health verification via HTTP checks
+- Real MCP protocol communication
+- Automatic server cleanup after tests
+
+**How It Works:**
+```python
+@pytest.mark.integration
+@pytest.mark.challenge(1)
+async def test_challenge1_list_tools(client, thread, challenge_server):
+    # challenge_server fixture automatically:
+    # 1. Spawns Challenge 1 server on port 9001
+    # 2. Verifies health via HTTP
+    # 3. Runs test
+    # 4. Cleans up server
+```
+
+## Running Integration Tests
+
+Integration tests automatically spawn MCP servers. Set environment variables:
 
 ```bash
-export DVMCP_SERVER_PATH="$HOME/path/to/damn-vulnerable-MCP-server"
+export DVMCP_SERVER_PATH="/path/to/damn-vulnerable-MCP-server"
+export DVMCP_CONDA_ENV="vul_mcp"  # Optional, defaults to 'vul_mcp'
+
+# Run all integration tests
 pytest tests/ -v -m integration
+
+# Run Challenge 1 tests only
+pytest tests/ -v -k "challenge1"
 ```
 
 The test framework automatically spawns and manages MCP server processes.
@@ -93,7 +122,17 @@ pytest tests/ -v
 
 ## Next Steps
 
-1. ✅ Non-integration tests - **COMPLETE**
-2. 🔜 Integration tests with auto-spawned MCP servers
-3. 🔜 Challenge-specific vulnerability tests
-4. 🔜 CI/CD integration (GitHub Actions)
+1. ✅ Non-integration tests - **COMPLETE (14/14)**
+2. ✅ Integration tests - Challenge 1 - **COMPLETE (3/3)**
+3. 🔜 Integration tests - Challenges 2-10
+4. 🔜 Challenge-specific vulnerability validation
+5. 🔜 CI/CD integration (GitHub Actions)
+
+## Latest Improvements
+
+**MCP Server Management (2025-10-04)**
+- ✅ Automatic conda environment activation (`vul_mcp`)
+- ✅ HTTP health checks with SSE timeout handling
+- ✅ Server crash detection with full error reporting
+- ✅ Automatic cleanup of spawned processes
+- ✅ Port conflict detection
