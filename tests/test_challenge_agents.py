@@ -260,6 +260,166 @@ class TestMCPIntegration:
         # Should have tool execution
         assert len(messages) >= 3
 
+    @pytest.mark.asyncio
+    @pytest.mark.integration
+    @pytest.mark.challenge(4)
+    async def test_challenge4_rug_pull(self, client, thread, challenge_server):
+        """Test Challenge4 rug pull attack"""
+        thread_id = thread["thread_id"]
+
+        # Call weather tool to test rug pull mechanism
+        run = await client.runs.create(
+            thread_id=thread_id,
+            assistant_id="Challenge4",
+            input={"messages": [{"role": "human", "content": "list available tools"}]}
+        )
+
+        await client.runs.join(thread_id, run["run_id"])
+
+        state = await client.threads.get_state(thread_id)
+        messages = state["values"]["messages"]
+
+        # Should have tool execution
+        tool_messages = [msg for msg in messages if isinstance(msg, dict) and msg.get("type") == "tool"]
+        assert len(tool_messages) > 0
+
+    @pytest.mark.asyncio
+    @pytest.mark.integration
+    @pytest.mark.challenge(5)
+    async def test_challenge5_tool_shadowing(self, client, thread, challenge_server):
+        """Test Challenge5 tool shadowing detection"""
+        thread_id = thread["thread_id"]
+
+        # List tools to see shadowing
+        run = await client.runs.create(
+            thread_id=thread_id,
+            assistant_id="Challenge5",
+            input={"messages": [{"role": "human", "content": "list available tools"}]}
+        )
+
+        await client.runs.join(thread_id, run["run_id"])
+
+        state = await client.threads.get_state(thread_id)
+        messages = state["values"]["messages"]
+
+        # Verify tools were listed
+        ai_messages = [msg for msg in messages if isinstance(msg, dict) and msg.get("type") == "ai"]
+        assert len(ai_messages) > 0
+
+    @pytest.mark.asyncio
+    @pytest.mark.integration
+    @pytest.mark.challenge(6)
+    async def test_challenge6_indirect_prompt_injection(self, client, thread, challenge_server):
+        """Test Challenge6 indirect prompt injection"""
+        thread_id = thread["thread_id"]
+
+        # List document tools
+        run = await client.runs.create(
+            thread_id=thread_id,
+            assistant_id="Challenge6",
+            input={"messages": [{"role": "human", "content": "list available tools"}]}
+        )
+
+        await client.runs.join(thread_id, run["run_id"])
+
+        state = await client.threads.get_state(thread_id)
+        messages = state["values"]["messages"]
+
+        # Should have tool execution
+        tool_messages = [msg for msg in messages if isinstance(msg, dict) and msg.get("type") == "tool"]
+        assert len(tool_messages) > 0
+
+    @pytest.mark.asyncio
+    @pytest.mark.integration
+    @pytest.mark.challenge(7)
+    async def test_challenge7_token_theft(self, client, thread, challenge_server):
+        """Test Challenge7 token theft via error messages"""
+        thread_id = thread["thread_id"]
+
+        # List available tools to check service status
+        run = await client.runs.create(
+            thread_id=thread_id,
+            assistant_id="Challenge7",
+            input={"messages": [{"role": "human", "content": "list tools and resources"}]}
+        )
+
+        await client.runs.join(thread_id, run["run_id"])
+
+        state = await client.threads.get_state(thread_id)
+        messages = state["values"]["messages"]
+
+        # Verify response
+        assert len(messages) >= 3
+
+    @pytest.mark.asyncio
+    @pytest.mark.integration
+    @pytest.mark.challenge(8)
+    async def test_challenge8_code_execution(self, client, thread, challenge_server):
+        """Test Challenge8 malicious code execution"""
+        thread_id = thread["thread_id"]
+
+        # List code execution tools
+        run = await client.runs.create(
+            thread_id=thread_id,
+            assistant_id="Challenge8",
+            input={"messages": [{"role": "human", "content": "list available tools"}]}
+        )
+
+        await client.runs.join(thread_id, run["run_id"])
+
+        state = await client.threads.get_state(thread_id)
+        messages = state["values"]["messages"]
+
+        # Should list dangerous tools
+        tool_messages = [msg for msg in messages if isinstance(msg, dict) and msg.get("type") == "tool"]
+        assert len(tool_messages) > 0
+
+    @pytest.mark.asyncio
+    @pytest.mark.integration
+    @pytest.mark.challenge(9)
+    async def test_challenge9_remote_access(self, client, thread, challenge_server):
+        """Test Challenge9 remote access control via command injection"""
+        thread_id = thread["thread_id"]
+
+        # List network diagnostic tools
+        run = await client.runs.create(
+            thread_id=thread_id,
+            assistant_id="Challenge9",
+            input={"messages": [{"role": "human", "content": "list available tools"}]}
+        )
+
+        await client.runs.join(thread_id, run["run_id"])
+
+        state = await client.threads.get_state(thread_id)
+        messages = state["values"]["messages"]
+
+        # Should list network tools
+        tool_messages = [msg for msg in messages if isinstance(msg, dict) and msg.get("type") == "tool"]
+        assert len(tool_messages) > 0
+
+    @pytest.mark.asyncio
+    @pytest.mark.integration
+    @pytest.mark.challenge(10)
+    async def test_challenge10_multi_vector(self, client, thread, challenge_server):
+        """Test Challenge10 multi-vector attack"""
+        thread_id = thread["thread_id"]
+
+        # List all available tools for multi-vector attack
+        run = await client.runs.create(
+            thread_id=thread_id,
+            assistant_id="Challenge10",
+            input={"messages": [{"role": "human", "content": "list tools and resources"}]}
+        )
+
+        await client.runs.join(thread_id, run["run_id"])
+
+        state = await client.threads.get_state(thread_id)
+        messages = state["values"]["messages"]
+
+        # Should have multiple tools available
+        tool_messages = [msg for msg in messages if isinstance(msg, dict) and msg.get("type") == "tool"]
+        assert len(tool_messages) > 0
+
 
 class TestChallengeConfiguration:
     """Test that challenge-specific configurations are loaded correctly"""
