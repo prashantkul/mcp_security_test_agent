@@ -51,7 +51,12 @@ langgraph-security-mcp/
 ├── mcp_client.py            # MCP client wrapper
 ├── hint_agent.py            # (Legacy) Interactive hint agent
 ├── langgraph.json           # LangGraph configuration
+├── pytest.ini               # Pytest configuration
 ├── requirements.txt         # Python dependencies
+├── tests/                   # Automated test suite
+│   ├── conftest.py          # Test fixtures and MCP server management
+│   ├── test_challenge_agents.py  # Main test suite
+│   └── README.md            # Testing documentation
 ├── .env                     # Environment variables (not committed)
 ├── .gitignore              # Git ignore rules
 └── README.md               # This file
@@ -97,6 +102,36 @@ LANGCHAIN_PROJECT=mcp-security-agent
 **Get API Keys:**
 - **Gemini API**: [Google AI Studio](https://makersuite.google.com/app/apikey)
 - **LangSmith API**: [LangSmith Settings](https://smith.langchain.com/settings)
+
+## 🧪 Testing
+
+### Automated Tests
+
+This project includes a comprehensive test suite with automatic MCP server spawning:
+
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio
+
+# Run all tests (without MCP servers)
+pytest tests/ -v -m "not integration"
+
+# Run integration tests (automatically spawns MCP servers)
+export DVMCP_SERVER_PATH="$HOME/path/to/damn-vulnerable-MCP-server"
+pytest tests/ -v -m integration
+
+# Run all tests
+pytest tests/ -v
+```
+
+**Test Features:**
+- ✅ Automatic MCP server spawning and cleanup
+- ✅ Conversation persistence validation
+- ✅ Function calling and tool execution tests
+- ✅ Challenge-specific vulnerability tests
+- ✅ Error handling and edge cases
+
+See [tests/README.md](tests/README.md) for detailed testing documentation.
 
 ## 🎮 Usage
 

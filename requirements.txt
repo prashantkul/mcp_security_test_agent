@@ -8,3 +8,7 @@ mcp
 python-dotenv
 langgraph-cli
 langgraph-sdk
+
+# Testing dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
