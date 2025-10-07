@@ -21,7 +21,7 @@ This repository contains an interactive security testing agent designed specific
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│           LangGraph Studio UI (Port 2024)           │
+│        LangChain Agent Chat UI(Port 2024)           │
 └─────────────────────┬───────────────────────────────┘
                       │
         ┌─────────────┴─────────────┐
